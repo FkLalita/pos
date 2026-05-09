@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>POS — Admin</title>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+  <nav class="navbar">
+    <h2>⚙️ POS — Admin</h2>
+    <div>
+      <a href="dashboard.html" style="font-size:.875rem;margin-right:1rem">Cashier View</a>
+      <button class="btn btn-sm btn-danger" id="logoutBtn">Logout</button>
+    </div>
+  </nav>
+
+  <div class="container">
+
+    <!-- Summary cards -->
+    <div class="grid-3" style="margin-bottom:1.5rem" id="summaryCards">
+      <div class="card"><h3>Today's Revenue</h3><p id="revenue" style="font-size:1.4rem;font-weight:700">—</p></div>
+      <div class="card"><h3>Sales Today</h3><p id="salesCount" style="font-size:1.4rem;font-weight:700">—</p></div>
+      <div class="card"><h3>Low Stock Items</h3><p id="lowStockCount" style="font-size:1.4rem;font-weight:700;color:var(--warning)">—</p></div>
+    </div>
+
+    <div class="grid-2">
+
+      <!-- Product list -->
+      <div class="card">
+        <h3>Products</h3>
+        <div id="alert" class="alert"></div>
+        <input class="search-bar" id="searchInput" placeholder="Search products…"/>
+        <table id="productTable">
+          <thead><tr><th>Name</th><th>Price</th><th>Stock</th><th>Category</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <!-- Add / Edit form -->
+      <div class="card">
+        <h3 id="formTitle">Add Product</h3>
+        <div id="formAlert" class="alert"></div>
+        <div class="field"><label>Name</label><input id="fName" placeholder="e.g. Indomie"/></div>
+        <div class="field"><label>Price (₦)</label><input id="fPrice" type="number" min="0" placeholder="150"/></div>
+        <div class="field"><label>Stock</label><input id="fStock" type="number" min="0" placeholder="100"/></div>
+        <div class="field"><label>Category</label><input id="fCategory" placeholder="e.g. Food"/></div>
+        <div style="display:flex;gap:.5rem">
+          <button class="btn btn-primary" id="saveBtn" style="flex:1">Add Product</button>
+          <button class="btn" id="cancelBtn" style="display:none;background:var(--border)">Cancel</button>
+        </div>
+        <hr style="margin:1rem 0"/>
+        <h3>Restock Product</h3>
+        <div class="field"><label>Product ID</label><input id="rId" type="number" placeholder="1"/></div>
+        <div class="field"><label>Quantity to Add</label><input id="rQty" type="number" min="1" placeholder="50"/></div>
+        <button class="btn btn-success" id="restockBtn" style="width:100%">Restock</button>
+      </div>
+
+    </div>
+  </div>
+
+  <script type="module" src="js/admin.js"></script>
+</body>
+</html>

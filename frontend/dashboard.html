@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>POS — Cashier</title>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+  <nav class="navbar">
+    <h2>🛒 POS — Cashier</h2>
+    <div>
+      <span id="cashierName"></span>
+      <button class="btn btn-sm btn-danger" id="logoutBtn" style="margin-left:1rem">Logout</button>
+    </div>
+  </nav>
+
+  <div class="container grid-2">
+
+    <!-- Left: Products -->
+    <div>
+      <input class="search-bar" id="searchInput" placeholder="Search products…" />
+      <div class="product-grid" id="productGrid">
+        <p style="color:var(--muted)">Loading products…</p>
+      </div>
+    </div>
+
+    <!-- Right: Cart -->
+    <div class="card">
+      <h3>Cart</h3>
+      <div id="cartItems">
+        <p style="color:var(--muted);font-size:.875rem">No items yet. Click a product to add.</p>
+      </div>
+      <div class="cart-total" id="cartTotal" style="display:none">Total: ₦0.00</div>
+      <br/>
+      <div id="alert" class="alert"></div>
+      <button class="btn btn-success" id="checkoutBtn" style="width:100%;display:none">
+        ✅ Checkout
+      </button>
+    </div>
+
+  </div>
+
+  <script type="module" src="js/dashboard.js"></script>
+</body>
+</html>

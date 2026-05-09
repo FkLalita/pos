@@ -4,18 +4,20 @@ const cors = require("cors");
 const authRoutes = require("./routes/authRoutes");
 const productRoutes = require("./routes/productRoutes");
 const saleRoutes = require("./routes/saleRoutes");
+const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-// Routes
+app.get("/", (req, res) => res.json({ message: "POS API is running" }));
+
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/sales", saleRoutes);
 
-// Health check
-app.get("/", (req, res) => res.json({ message: "POS API is running" }));
+// Must be last — catches all errors
+app.use(errorHandler);
 
 module.exports = app;
