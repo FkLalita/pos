@@ -77,6 +77,7 @@ const getDailySummary = () => request("/sales/summary");
 
 export {
   getToken, getUser, saveAuth, clearAuth,
+  request,
   login,
   getProducts, createProduct, updateProduct, deleteProduct, restockProduct, getLowStock,
   createSale, getSales, getDailySummary,
