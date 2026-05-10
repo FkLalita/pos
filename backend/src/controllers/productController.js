@@ -6,15 +6,24 @@ const getAll = async (req, res, next) => {
     const { category, search } = req.query;
     let query = "SELECT * FROM products WHERE 1=1";
     const params = [];
+    let paramIndex = 1;
 
-    if (search) { params.push(`%${search}%`); query += ` AND name ILIKE ${params.length}`; }
-    if (category) { params.push(category); query += ` AND category = ${params.length}`; }
+    if (search) {
+      params.push(`%${search}%`);
+      query += ` AND name ILIKE $${paramIndex}`;
+      paramIndex++;
+    }
+    if (category) {
+      params.push(category);
+      query += ` AND category ILIKE $${paramIndex}`;
+      paramIndex++;
+    }
 
+    query += " ORDER BY name ASC";
     const { rows } = await db.query(query, params);
     res.json(rows);
   } catch (e) { next(e); }
 };
-
 const getOne = async (req, res, next) => {
   try {
     const { rows } = await db.query("SELECT * FROM products WHERE id = $1", [req.params.id]);
