@@ -132,80 +132,68 @@ const resetForm = () => {
 cancelBtn.addEventListener("click", resetForm);
 
 // ── Restock ───────────────────────────────────
-document.getElementById("restockBtn").addEventListener("click", async () => {
-  const id = document.getElementById("rId").value;
-  const qty = document.getElementById("rQty").value;
-  if (!id || !qty) return showAlert(formAlertEl, "Enter product ID and quantity");
+const restockSelect = document.getElementById("restockProduct");
+const restockQty = document.getElementById("restockQty");
+const restockMsg = document.getElementById("restockMsg");
+
+// Populate restock dropdown
+const loadRestockDropdown = async () => {
   try {
-    const res = await restockProduct(Number(id), Number(qty));
-    showAlert(formAlertEl, `Restocked! New stock: ${res.product.stock}`, "success");
+    const products = await getProducts();
+    restockSelect.innerHTML = '<option value="">Select a product...</option>';
+    products.forEach(p => {
+      const option = document.createElement("option");
+      option.value = p.name;
+      option.textContent = `${p.name} (Stock: ${p.stock})`;
+      restockSelect.appendChild(option);
+    });
+  } catch (e) {
+    console.error("Failed to load restock dropdown:", e);
+  }
+};
+
+// Restock button handler
+document.getElementById("restockBtn").addEventListener("click", async () => {
+  const name = restockSelect.value;
+  const qty = parseInt(restockQty.value);
+
+  if (!name) return showAlert(restockMsg, "Please select a product");
+  if (!qty || qty <= 0) return showAlert(restockMsg, "Quantity must be a positive number");
+
+  restockBtn.disabled = true;
+  try {
+    // Use the existing restockProduct from api.js — but we need restock by name
+    // Since api.js exports restockProduct(id, qty), we call our new endpoint directly
+    const token = getToken();
+    const res = await fetch("https://pos-backend-zb2r.onrender.com/api/products/restock-by-name", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({ name, quantity: qty })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || "Restock failed");
+    }
+
+    const data = await res.json();
+    showAlert(restockMsg, `✅ ${data.product.name} restocked! New stock: ${data.product.stock}`, "success");
+    restockQty.value = "";
+    restockSelect.value = "";
+    loadRestockDropdown();
     loadProducts();
     loadSummary();
-  } catch (e) { showAlert(formAlertEl, e.message); }
+  } catch (e) {
+    showAlert(restockMsg, e.message);
+  } finally {
+    restockBtn.disabled = false;
+  }
 });
-
-// ── Search ────────────────────────────────────
-let timer;
-searchInput.addEventListener("input", () => {
-  clearTimeout(timer);
-  timer = setTimeout(() => loadProducts(searchInput.value), 300);
-});
-
-// Populate restock dropdown when page loads
-async function loadRestockDropdown() {
-  try {
-    const products = await request("/products");
-    const select = document.getElementById("restockProduct");
-
-    // Clear existing options except the first
-    select.innerHTML = '<option value="">Select a product...</option>';
-
-    products.forEach(product => {
-      const option = document.createElement("option");
-      option.value = product.name;
-      option.textContent = `${product.name} (Stock: ${product.stock})`;
-      select.appendChild(option);
-    });
-  } catch (error) {
-    console.error("Failed to load products for restock:", error);
-  }
-}
-
-// Updated restock handler
-async function handleRestock(e) {
-  e.preventDefault();
-
-  const productName = document.getElementById("restockProduct").value;
-  const quantity = parseInt(document.getElementById("restockQuantity").value);
-
-  if (!productName) {
-    alert("Please select a product");
-    return;
-  }
-  if (!quantity || quantity <= 0) {
-    alert("Quantity must be positive");
-    return;
-  }
-
-  try {
-    const result = await request("/products/restock-by-name", {
-      method: "PATCH",
-      body: JSON.stringify({ name: productName, quantity })
-    });
-
-    alert(`Success! ${result.product.name} now has ${result.product.stock} in stock.`);
-    loadRestockDropdown(); // Refresh dropdown with new stock counts
-    loadProducts();        // Refresh product table if you have one
-  } catch (error) {
-    alert("Restock failed: " + error.message);
-  }
-}
-
-// Call this on page load
-loadRestockDropdown();
-
-
 
 // ── Init ──────────────────────────────────────
 loadProducts();
 loadSummary();
+loadRestockDropdown();
