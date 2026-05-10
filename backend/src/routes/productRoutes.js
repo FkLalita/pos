@@ -3,7 +3,8 @@ const router = express.Router();
 const { protect, adminOnly } = require("../middleware/authMiddleware");
 const validate = require("../middleware/validate");
 const {
-  getAll, getOne, create, update, remove, restock, getLowStock
+  getAll, getOne, create, update, remove,
+  restock, restockByName, getLowStock
 } = require("../controllers/productController");
 
 const productSchema = {
@@ -18,6 +19,7 @@ router.post("/", protect, adminOnly, validate(productSchema), create);
 router.get("/:id", protect, getOne);
 router.put("/:id", protect, adminOnly, update);
 router.patch("/:id/restock", protect, adminOnly, restock);
+router.patch("/restock-by-name", protect, adminOnly, restockByName);
 router.delete("/:id", protect, adminOnly, remove);
 
 module.exports = router;

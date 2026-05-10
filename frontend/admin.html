@@ -52,9 +52,14 @@
         </div>
         <hr style="margin:1rem 0"/>
         <h3>Restock Product</h3>
-        <div class="field"><label>Product ID</label><input id="rId" type="number" placeholder="1"/></div>
-        <div class="field"><label>Quantity to Add</label><input id="rQty" type="number" min="1" placeholder="50"/></div>
-        <button class="btn btn-success" id="restockBtn" style="width:100%">Restock</button>
+     <!-- Replace the ID input with this -->
+<div class="form-group">
+  <label>Product Name</label>
+  <select id="restockProduct" required>
+    <option value="">Select a product...</option>
+    <!-- Populated by JavaScript -->
+  </select>
+</div>
       </div>
 
     </div>

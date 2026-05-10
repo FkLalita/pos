@@ -151,6 +151,61 @@ searchInput.addEventListener("input", () => {
   timer = setTimeout(() => loadProducts(searchInput.value), 300);
 });
 
+// Populate restock dropdown when page loads
+async function loadRestockDropdown() {
+  try {
+    const products = await request("/products");
+    const select = document.getElementById("restockProduct");
+
+    // Clear existing options except the first
+    select.innerHTML = '<option value="">Select a product...</option>';
+
+    products.forEach(product => {
+      const option = document.createElement("option");
+      option.value = product.name;
+      option.textContent = `${product.name} (Stock: ${product.stock})`;
+      select.appendChild(option);
+    });
+  } catch (error) {
+    console.error("Failed to load products for restock:", error);
+  }
+}
+
+// Updated restock handler
+async function handleRestock(e) {
+  e.preventDefault();
+
+  const productName = document.getElementById("restockProduct").value;
+  const quantity = parseInt(document.getElementById("restockQuantity").value);
+
+  if (!productName) {
+    alert("Please select a product");
+    return;
+  }
+  if (!quantity || quantity <= 0) {
+    alert("Quantity must be positive");
+    return;
+  }
+
+  try {
+    const result = await request("/products/restock-by-name", {
+      method: "PATCH",
+      body: JSON.stringify({ name: productName, quantity })
+    });
+
+    alert(`Success! ${result.product.name} now has ${result.product.stock} in stock.`);
+    loadRestockDropdown(); // Refresh dropdown with new stock counts
+    loadProducts();        // Refresh product table if you have one
+  } catch (error) {
+    alert("Restock failed: " + error.message);
+  }
+}
+
+// Call this on page load
+loadRestockDropdown();
+
+
+
 // ── Init ──────────────────────────────────────
 loadProducts();
 loadSummary();

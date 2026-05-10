@@ -95,4 +95,30 @@ const getLowStock = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
-module.exports = { getAll, getOne, create, update, remove, restock, getLowStock };
+const restockByName = async (req, res, next) => {
+  try {
+    const { name, quantity } = req.body;
+
+    if (!name) return res.status(400).json({ error: "Product name is required" });
+    if (!quantity || quantity <= 0)
+      return res.status(400).json({ error: "Quantity must be a positive number" });
+
+    // Find product by name (case-insensitive)
+    const { rows } = await db.query(
+      "SELECT * FROM products WHERE name ILIKE $1",
+      [name.trim()]
+    );
+
+    if (!rows[0]) return res.status(404).json({ error: "Product not found" });
+
+    // Restock it
+    const { rows: updated } = await db.query(
+      "UPDATE products SET stock = stock + $1 WHERE id = $2 RETURNING *",
+      [Number(quantity), rows[0].id]
+    );
+
+    res.json({ message: "Stock updated", product: updated[0] });
+  } catch (e) { next(e); }
+};
+
+module.exports = { getAll, getOne, create, update, remove, restock, getLowStock, restockByName };
