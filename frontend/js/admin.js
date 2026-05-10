@@ -1,7 +1,7 @@
 import {
   getToken, getUser, clearAuth,
   getProducts, createProduct, updateProduct, deleteProduct, restockProduct,
-  getLowStock, getDailySummary, request  // ← ADD request here
+  getLowStock, getDailySummary, request
 } from "./api.js";
 
 // Auth guard — admin only
@@ -18,6 +18,9 @@ const formAlertEl = document.getElementById("formAlert");
 const saveBtn = document.getElementById("saveBtn");
 const cancelBtn = document.getElementById("cancelBtn");
 const formTitle = document.getElementById("formTitle");
+const restockSelect = document.getElementById("restockProduct");
+const restockQty = document.getElementById("restockQty");
+const restockBtn = document.getElementById("restockByNameBtn");
 
 let editingId = null;
 
@@ -89,7 +92,7 @@ saveBtn.addEventListener("click", async () => {
     resetForm();
     loadProducts();
     loadSummary();
-    loadRestockDropdown(); // ← Refresh dropdown too
+    loadRestockDropdown();
   } catch (e) {
     showAlert(formAlertEl, e.message);
   } finally {
@@ -122,7 +125,7 @@ window._del = async (id, name) => {
     showAlert(alertEl, `"${name}" deleted.`, "success");
     loadProducts();
     loadSummary();
-    loadRestockDropdown(); // ← Refresh dropdown
+    loadRestockDropdown();
   } catch (e) { showAlert(alertEl, e.message); }
 };
 
@@ -148,17 +151,16 @@ searchInput.addEventListener("input", () => {
 // ── Restock Dropdown ──────────────────────────
 async function loadRestockDropdown() {
   try {
-    const products = await getProducts(); // ← Use getProducts, not raw request()
-    const select = document.getElementById("restockProduct");
-    if (!select) return; // Safety check
+    const products = await getProducts();
+    if (!restockSelect) return;
 
-    select.innerHTML = '<option value="">Select a product...</option>';
+    restockSelect.innerHTML = '<option value="">Select a product...</option>';
 
     products.forEach(product => {
       const option = document.createElement("option");
       option.value = product.name;
       option.textContent = `${product.name} (Stock: ${product.stock})`;
-      select.appendChild(option);
+      restockSelect.appendChild(option);
     });
   } catch (error) {
     console.error("Failed to load products for restock:", error);
@@ -166,9 +168,9 @@ async function loadRestockDropdown() {
 }
 
 // ── Restock Handler ───────────────────────────
-document.getElementById("restockByNameBtn").addEventListener("click", async () => {
-  const productName = document.getElementById("restockProduct").value;
-  const quantity = parseInt(document.getElementById("restockQty").value);
+restockBtn.addEventListener("click", async () => {
+  const productName = restockSelect.value;
+  const quantity = parseInt(restockQty.value);
 
   if (!productName) {
     showAlert(formAlertEl, "Please select a product");
@@ -179,6 +181,7 @@ document.getElementById("restockByNameBtn").addEventListener("click", async () =
     return;
   }
 
+  restockBtn.disabled = true;
   try {
     const result = await request("/products/restock-by-name", {
       method: "PATCH",
@@ -186,12 +189,14 @@ document.getElementById("restockByNameBtn").addEventListener("click", async () =
     });
 
     showAlert(formAlertEl, `Restocked! ${result.product.name} now has ${result.product.stock} in stock.`, "success");
+    restockQty.value = "";
     loadRestockDropdown();
     loadProducts();
     loadSummary();
-    document.getElementById("restockQty").value = "";
   } catch (error) {
     showAlert(formAlertEl, error.message);
+  } finally {
+    restockBtn.disabled = false;
   }
 });
 

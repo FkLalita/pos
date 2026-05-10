@@ -12,14 +12,16 @@ const productSchema = {
   price: { required: true, type: "number", min: 0 },
 };
 
+// ── Static routes FIRST ──────────────────────
 router.get("/", protect, getAll);
 router.get("/low-stock", protect, getLowStock);
 router.post("/", protect, adminOnly, validate(productSchema), create);
+router.patch("/restock-by-name", protect, adminOnly, restockByName);
 
+// ── Parameterized routes LAST ────────────────
 router.get("/:id", protect, getOne);
 router.put("/:id", protect, adminOnly, update);
 router.patch("/:id/restock", protect, adminOnly, restock);
-router.patch("/restock-by-name", protect, adminOnly, restockByName);
 router.delete("/:id", protect, adminOnly, remove);
 
 module.exports = router;
