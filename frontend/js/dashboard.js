@@ -5,6 +5,7 @@ if (!getToken()) location.href = "index.html";
 const user = getUser();
 document.getElementById("cashierName").textContent = `👤 ${user?.name}`;
 document.getElementById("logoutBtn").onclick = () => { clearAuth(); location.href = "index.html"; };
+if (user?.role === "admin") document.getElementById("adminLink").style.display = "inline";
 
 // ── State ─────────────────────────────────────
 let cart = [];   // [{ product, quantity }]
@@ -111,6 +112,28 @@ const renderCart = () => {
 window._rm = removeFromCart;
 window._qty = changeQty;
 
+// ── Receipt ───────────────────────────────────
+const receiptModal = document.getElementById("receiptModal");
+const closeReceiptBtn = document.getElementById("closeReceipt");
+
+closeReceiptBtn.onclick = () => receiptModal.classList.remove("show");
+
+const showReceipt = (saleId, total) => {
+  document.getElementById("receiptDate").textContent =
+    new Date().toLocaleString("en-NG");
+  document.getElementById("receiptCashier").textContent = `Cashier: ${user?.name}`;
+  document.getElementById("receiptItems").innerHTML = cart.map(i => `
+    <tr>
+      <td>${i.product.name}</td>
+      <td style="text-align:center">${i.quantity}x</td>
+      <td>₦${(i.product.price * i.quantity).toLocaleString()}</td>
+    </tr>
+  `).join("");
+  document.getElementById("receiptTotal").textContent =
+    `Total: ₦${Number(total).toLocaleString()}`;
+  receiptModal.classList.add("show");
+};
+
 // ── Checkout ──────────────────────────────────
 checkoutBtn.addEventListener("click", async () => {
   if (!cart.length) return;
@@ -120,10 +143,10 @@ checkoutBtn.addEventListener("click", async () => {
   try {
     const items = cart.map(i => ({ product_id: i.product.id, quantity: i.quantity }));
     const result = await createSale(items);
-    showAlert(`Sale #${result.saleId} recorded! Total: ₦${result.total.toLocaleString()}`, "success");
+    showReceipt(result.saleId, result.total);
     cart = [];
     renderCart();
-    loadProducts(); // refresh stock
+    loadProducts();
   } catch (e) {
     showAlert(e.message);
   } finally {

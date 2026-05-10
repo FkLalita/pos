@@ -7,6 +7,13 @@
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
+
+  <!-- Wake-up overlay -->
+  <div id="wakeOverlay">
+    <div class="spinner"></div>
+    <p style="color:var(--muted);font-size:.9rem">Starting server, please wait…</p>
+  </div>
+
   <div class="auth-wrapper">
     <div class="auth-card">
       <h1>🛒 POS System</h1>
@@ -22,10 +29,12 @@
         <input type="password" id="password" placeholder="••••••" />
       </div>
       <button class="btn btn-primary" id="loginBtn">Login</button>
+      <p style="text-align:center;margin-top:1rem;font-size:.85rem;color:var(--muted)">
+        New cashier? <a href="register.html">Create account</a>
+      </p>
     </div>
   </div>
 
   <script type="module" src="js/auth.js"></script>
 </body>
-
 </html>

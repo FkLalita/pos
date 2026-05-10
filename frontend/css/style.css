@@ -128,3 +128,55 @@ th { font-weight: 600; color: var(--muted); }
   width: 100%; padding: .5rem .75rem; margin-bottom: 1rem;
   border: 1px solid var(--border); border-radius: var(--radius); font-size: .9rem;
 }
+
+/* ── Wake-up overlay ── */
+#wakeOverlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(255,255,255,.92); z-index: 999;
+  flex-direction: column; align-items: center; justify-content: center; gap: 1rem;
+}
+#wakeOverlay.show { display: flex; }
+.spinner {
+  width: 40px; height: 40px; border: 4px solid var(--border);
+  border-top-color: var(--primary); border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Login button loading ── */
+.btn-primary.loading {
+  background: var(--primary-dark); opacity: .8; cursor: not-allowed;
+  display: flex; gap: .5rem;
+}
+.btn-primary.loading::before {
+  content: ""; width: 14px; height: 14px;
+  border: 2px solid rgba(255,255,255,.4);
+  border-top-color: #fff; border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+
+/* ── Receipt ── */
+@media print {
+  body > *:not(#receiptModal) { display: none !important; }
+  #receiptModal { position: static !important; background: none !important; }
+  .no-print { display: none !important; }
+}
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.5); z-index: 100;
+  align-items: center; justify-content: center;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: var(--white); border-radius: var(--radius);
+  padding: 1.5rem; width: 100%; max-width: 360px;
+  box-shadow: 0 4px 20px rgba(0,0,0,.15);
+}
+.receipt-header { text-align: center; margin-bottom: 1rem; }
+.receipt-header h2 { font-size: 1.1rem; }
+.receipt-header p  { font-size: .8rem; color: var(--muted); }
+.receipt-items { width: 100%; border-collapse: collapse; font-size: .85rem; margin: .75rem 0; }
+.receipt-items td { padding: .3rem 0; }
+.receipt-items td:last-child { text-align: right; }
+.receipt-total { font-weight: 700; font-size: 1rem; text-align: right; border-top: 1px dashed var(--border); padding-top: .5rem; }
+.receipt-footer { text-align: center; font-size: .75rem; color: var(--muted); margin-top: .75rem; }
