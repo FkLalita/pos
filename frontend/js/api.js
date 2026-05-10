@@ -1,9 +1,9 @@
-cconst BASE = "https://pos-backend.onrender.com/api";
+const BASE = "https://pos-backend-zb2r.onrender.com/api";
 
 // ── Token helpers ──────────────────────────────
-const getToken  = () => localStorage.getItem("token");
-const getUser   = () => JSON.parse(localStorage.getItem("user") || "null");
-const saveAuth  = (token, user) => {
+const getToken = () => localStorage.getItem("token");
+const getUser = () => JSON.parse(localStorage.getItem("user") || "null");
+const saveAuth = (token, user) => {
   localStorage.setItem("token", token);
   localStorage.setItem("user", JSON.stringify(user));
 };
@@ -47,7 +47,7 @@ const login = (email, password) =>
 // ── Products ───────────────────────────────────
 const getProducts = (search = "", category = "") => {
   const params = new URLSearchParams();
-  if (search)   params.set("search", search);
+  if (search) params.set("search", search);
   if (category) params.set("category", category);
   return request(`/products?${params}`);
 };
