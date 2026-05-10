@@ -1,17 +1,18 @@
-import { login, saveAuth, getUser, getToken } from "./api.js";
+const BASE = "https://pos-backend-zb2r.onrender.com/api";
 
 // Redirect if already logged in
-if (getToken()) {
-  const user = getUser();
+const token = localStorage.getItem("token");
+const user = JSON.parse(localStorage.getItem("user") || "null");
+if (token) {
   location.href = user?.role === "admin" ? "admin.html" : "dashboard.html";
 }
 
-const alert = document.getElementById("alert");
+const alertEl = document.getElementById("alert");
 const btn = document.getElementById("loginBtn");
 
 const showAlert = (msg, type = "error") => {
-  alert.textContent = msg;
-  alert.className = `alert alert-${type} show`;
+  alertEl.textContent = msg;
+  alertEl.className = `alert alert-${type} show`;
 };
 
 btn.addEventListener("click", async () => {
@@ -24,8 +25,16 @@ btn.addEventListener("click", async () => {
   btn.disabled = true;
 
   try {
-    const data = await login(email, password);
-    saveAuth(data.token, data.user);
+    const res = await fetch(`${BASE}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Login failed");
+
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("user", JSON.stringify(data.user));
     location.href = data.user.role === "admin" ? "admin.html" : "dashboard.html";
   } catch (e) {
     showAlert(e.message);
