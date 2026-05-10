@@ -1,7 +1,7 @@
 import {
   getToken, getUser, clearAuth,
   getProducts, createProduct, updateProduct, deleteProduct, restockProduct,
-  getLowStock, getDailySummary
+  getLowStock, getDailySummary, request  // ← ADD request here
 } from "./api.js";
 
 // Auth guard — admin only
@@ -32,12 +32,14 @@ const showAlert = (el, msg, type = "error") => {
 const loadSummary = async () => {
   try {
     const [summary, lowStock] = await Promise.all([getDailySummary(), getLowStock()]);
-    const today = summary[0]; // most recent day
+    const today = summary[0];
     document.getElementById("revenue").textContent =
       today ? `₦${Number(today.revenue).toLocaleString()}` : "₦0";
     document.getElementById("salesCount").textContent = today?.total_sales ?? 0;
     document.getElementById("lowStockCount").textContent = lowStock.count;
-  } catch { }
+  } catch (e) {
+    console.error("Summary load failed:", e);
+  }
 };
 
 // ── Product table ─────────────────────────────
@@ -56,11 +58,14 @@ const loadProducts = async (search = "") => {
         <td>${p.category || "—"}</td>
         <td style="display:flex;gap:.4rem">
           <button class="btn btn-sm btn-primary" onclick="window._edit(${p.id})">Edit</button>
-          <button class="btn btn-sm btn-danger"  onclick="window._del(${p.id}, '${p.name}')">Del</button>
+          <button class="btn btn-sm btn-danger"  onclick="window._del(${p.id}, '${p.name.replace(/'/g, "\\'")}')">Del</button>
         </td>
       </tr>
     `).join("") : `<tr><td colspan="5" style="color:var(--muted)">No products.</td></tr>`;
-  } catch (e) { showAlert(alertEl, e.message); }
+  } catch (e) {
+    console.error("Product load failed:", e);
+    showAlert(alertEl, e.message);
+  }
 };
 
 // ── Save (add / update) ───────────────────────
@@ -84,6 +89,7 @@ saveBtn.addEventListener("click", async () => {
     resetForm();
     loadProducts();
     loadSummary();
+    loadRestockDropdown(); // ← Refresh dropdown too
   } catch (e) {
     showAlert(formAlertEl, e.message);
   } finally {
@@ -116,6 +122,7 @@ window._del = async (id, name) => {
     showAlert(alertEl, `"${name}" deleted.`, "success");
     loadProducts();
     loadSummary();
+    loadRestockDropdown(); // ← Refresh dropdown
   } catch (e) { showAlert(alertEl, e.message); }
 };
 
@@ -131,65 +138,60 @@ const resetForm = () => {
 // ── Cancel edit ───────────────────────────────
 cancelBtn.addEventListener("click", resetForm);
 
-// ── Restock ───────────────────────────────────
-const restockSelect = document.getElementById("restockProduct");
-const restockQty = document.getElementById("restockQty");
-const restockMsg = document.getElementById("restockMsg");
+// ── Search ────────────────────────────────────
+let timer;
+searchInput.addEventListener("input", () => {
+  clearTimeout(timer);
+  timer = setTimeout(() => loadProducts(searchInput.value), 300);
+});
 
-// Populate restock dropdown
-const loadRestockDropdown = async () => {
+// ── Restock Dropdown ──────────────────────────
+async function loadRestockDropdown() {
   try {
-    const products = await getProducts();
-    restockSelect.innerHTML = '<option value="">Select a product...</option>';
-    products.forEach(p => {
+    const products = await getProducts(); // ← Use getProducts, not raw request()
+    const select = document.getElementById("restockProduct");
+    if (!select) return; // Safety check
+
+    select.innerHTML = '<option value="">Select a product...</option>';
+
+    products.forEach(product => {
       const option = document.createElement("option");
-      option.value = p.name;
-      option.textContent = `${p.name} (Stock: ${p.stock})`;
-      restockSelect.appendChild(option);
+      option.value = product.name;
+      option.textContent = `${product.name} (Stock: ${product.stock})`;
+      select.appendChild(option);
     });
-  } catch (e) {
-    console.error("Failed to load restock dropdown:", e);
+  } catch (error) {
+    console.error("Failed to load products for restock:", error);
   }
-};
+}
 
-// Restock button handler
-document.getElementById("restockBtn").addEventListener("click", async () => {
-  const name = restockSelect.value;
-  const qty = parseInt(restockQty.value);
+// ── Restock Handler ───────────────────────────
+document.getElementById("restockByNameBtn").addEventListener("click", async () => {
+  const productName = document.getElementById("restockProduct").value;
+  const quantity = parseInt(document.getElementById("restockQty").value);
 
-  if (!name) return showAlert(restockMsg, "Please select a product");
-  if (!qty || qty <= 0) return showAlert(restockMsg, "Quantity must be a positive number");
+  if (!productName) {
+    showAlert(formAlertEl, "Please select a product");
+    return;
+  }
+  if (!quantity || quantity <= 0) {
+    showAlert(formAlertEl, "Quantity must be a positive number");
+    return;
+  }
 
-  restockBtn.disabled = true;
   try {
-    // Use the existing restockProduct from api.js — but we need restock by name
-    // Since api.js exports restockProduct(id, qty), we call our new endpoint directly
-    const token = getToken();
-    const res = await fetch("https://pos-backend-zb2r.onrender.com/api/products/restock-by-name", {
+    const result = await request("/products/restock-by-name", {
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      },
-      body: JSON.stringify({ name, quantity: qty })
+      body: JSON.stringify({ name: productName, quantity })
     });
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || "Restock failed");
-    }
-
-    const data = await res.json();
-    showAlert(restockMsg, `✅ ${data.product.name} restocked! New stock: ${data.product.stock}`, "success");
-    restockQty.value = "";
-    restockSelect.value = "";
+    showAlert(formAlertEl, `Restocked! ${result.product.name} now has ${result.product.stock} in stock.`, "success");
     loadRestockDropdown();
     loadProducts();
     loadSummary();
-  } catch (e) {
-    showAlert(restockMsg, e.message);
-  } finally {
-    restockBtn.disabled = false;
+    document.getElementById("restockQty").value = "";
+  } catch (error) {
+    showAlert(formAlertEl, error.message);
   }
 });
 
