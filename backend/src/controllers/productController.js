@@ -1,97 +1,89 @@
 
 const db = require("../db/database");
 
-const getAll = (req, res, next) => {
+const getAll = async (req, res, next) => {
   try {
     const { category, search } = req.query;
     let query = "SELECT * FROM products WHERE 1=1";
     const params = [];
 
-    if (category) { query += " AND category = ?"; params.push(category); }
-    if (search) { query += " AND name LIKE ?"; params.push(`%${search}%`); }
+    if (search) { params.push(`%${search}%`); query += ` AND name ILIKE ${params.length}`; }
+    if (category) { params.push(category); query += ` AND category = ${params.length}`; }
 
-    const products = db.prepare(query).all(...params);
-    res.json(products);
+    const { rows } = await db.query(query, params);
+    res.json(rows);
   } catch (e) { next(e); }
 };
 
-const getOne = (req, res, next) => {
+const getOne = async (req, res, next) => {
   try {
-    const product = db.prepare("SELECT * FROM products WHERE id = ?").get(req.params.id);
-    if (!product) return res.status(404).json({ error: "Product not found" });
-    res.json(product);
+    const { rows } = await db.query("SELECT * FROM products WHERE id = $1", [req.params.id]);
+    if (!rows[0]) return res.status(404).json({ error: "Product not found" });
+    res.json(rows[0]);
   } catch (e) { next(e); }
 };
 
-const create = (req, res, next) => {
+const create = async (req, res, next) => {
   try {
     const { name, price, stock, category } = req.body;
-    const stmt = db.prepare(
-      "INSERT INTO products (name, price, stock, category) VALUES (?, ?, ?, ?)"
+    const { rows } = await db.query(
+      "INSERT INTO products (name, price, stock, category) VALUES ($1, $2, $3, $4) RETURNING *",
+      [name, Number(price), Number(stock) || 0, category || null]
     );
-    const result = stmt.run(name, Number(price), Number(stock) || 0, category || null);
-    res.status(201).json({ id: result.lastInsertRowid, name, price, stock, category });
+    res.status(201).json(rows[0]);
   } catch (e) { next(e); }
 };
 
-const update = (req, res, next) => {
+const update = async (req, res, next) => {
   try {
-    const { name, price, stock, category } = req.body;
-    const existing = db.prepare("SELECT * FROM products WHERE id = ?").get(req.params.id);
-    if (!existing) return res.status(404).json({ error: "Product not found" });
+    const { rows: existing } = await db.query("SELECT * FROM products WHERE id = $1", [req.params.id]);
+    if (!existing[0]) return res.status(404).json({ error: "Product not found" });
 
-    db.prepare(
-      "UPDATE products SET name = ?, price = ?, stock = ?, category = ? WHERE id = ?"
-    ).run(
-      name ?? existing.name,
-      price ?? existing.price,
-      stock ?? existing.stock,
-      category ?? existing.category,
-      req.params.id
+    const p = existing[0];
+    const { name, price, stock, category } = req.body;
+    await db.query(
+      "UPDATE products SET name=$1, price=$2, stock=$3, category=$4 WHERE id=$5",
+      [name ?? p.name, price ?? p.price, stock ?? p.stock, category ?? p.category, req.params.id]
     );
     res.json({ message: "Product updated" });
   } catch (e) { next(e); }
 };
 
-const remove = (req, res, next) => {
+const remove = async (req, res, next) => {
   try {
-    const existing = db.prepare("SELECT * FROM products WHERE id = ?").get(req.params.id);
-    if (!existing) return res.status(404).json({ error: "Product not found" });
-    db.prepare("DELETE FROM products WHERE id = ?").run(req.params.id);
+    const { rows } = await db.query("SELECT * FROM products WHERE id = $1", [req.params.id]);
+    if (!rows[0]) return res.status(404).json({ error: "Product not found" });
+    await db.query("DELETE FROM products WHERE id = $1", [req.params.id]);
     res.json({ message: "Product deleted" });
   } catch (e) { next(e); }
 };
 
-// Restock a product — admin only
-// Body: { quantity: 50 }
-const restock = (req, res, next) => {
+const restock = async (req, res, next) => {
   try {
     const { quantity } = req.body;
     if (!quantity || quantity <= 0)
       return res.status(400).json({ error: "Quantity must be a positive number" });
 
-    const product = db.prepare("SELECT * FROM products WHERE id = ?").get(req.params.id);
-    if (!product) return res.status(404).json({ error: "Product not found" });
+    const { rows } = await db.query("SELECT * FROM products WHERE id = $1", [req.params.id]);
+    if (!rows[0]) return res.status(404).json({ error: "Product not found" });
 
-    db.prepare("UPDATE products SET stock = stock + ? WHERE id = ?")
-      .run(Number(quantity), req.params.id);
-
-    const updated = db.prepare("SELECT * FROM products WHERE id = ?").get(req.params.id);
-    res.json({ message: "Stock updated", product: updated });
+    const { rows: updated } = await db.query(
+      "UPDATE products SET stock = stock + $1 WHERE id = $2 RETURNING *",
+      [Number(quantity), req.params.id]
+    );
+    res.json({ message: "Stock updated", product: updated[0] });
   } catch (e) { next(e); }
 };
 
-// Get products with stock below threshold (default: 10)
-const getLowStock = (req, res, next) => {
+const getLowStock = async (req, res, next) => {
   try {
     const threshold = Number(req.query.threshold) || 10;
-    const products = db.prepare(
-      "SELECT * FROM products WHERE stock <= ? ORDER BY stock ASC"
-    ).all(threshold);
-    res.json({ threshold, count: products.length, products });
+    const { rows } = await db.query(
+      "SELECT * FROM products WHERE stock <= $1 ORDER BY stock ASC",
+      [threshold]
+    );
+    res.json({ threshold, count: rows.length, products: rows });
   } catch (e) { next(e); }
 };
 
 module.exports = { getAll, getOne, create, update, remove, restock, getLowStock };
-
-

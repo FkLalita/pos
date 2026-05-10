@@ -1,28 +1,29 @@
-// src/controllers/authController.js
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const db = require("../db/database");
 
-const register = (req, res) => {
+const register = async (req, res) => {
   const { name, email, password, role } = req.body;
   if (!name || !email || !password)
     return res.status(400).json({ error: "All fields required" });
 
   const hashed = bcrypt.hashSync(password, 10);
   try {
-    const stmt = db.prepare(
-      "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)"
+    await db.query(
+      "INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4)",
+      [name, email, hashed, role || "cashier"]
     );
-    stmt.run(name, email, hashed, role || "cashier");
     res.status(201).json({ message: "User created" });
   } catch (e) {
     res.status(400).json({ error: "Email already exists" });
   }
 };
 
-const login = (req, res) => {
+const login = async (req, res) => {
   const { email, password } = req.body;
-  const user = db.prepare("SELECT * FROM users WHERE email = ?").get(email);
+  const { rows } = await db.query("SELECT * FROM users WHERE email = $1", [email]);
+  const user = rows[0];
+
   if (!user || !bcrypt.compareSync(password, user.password))
     return res.status(401).json({ error: "Invalid credentials" });
 
@@ -35,7 +36,3 @@ const login = (req, res) => {
 };
 
 module.exports = { register, login };
-
-
-
-

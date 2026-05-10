@@ -1,4 +1,4 @@
-// src/routes / saleRoutes.js
+
 const express = require("express");
 const router = express.Router();
 const { protect } = require("../middleware/authMiddleware");
@@ -10,3 +10,4 @@ router.get("/summary", protect, getDailySummary);
 router.get("/:id", protect, getSaleById);
 
 module.exports = router;
+

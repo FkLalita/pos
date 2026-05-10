@@ -11,7 +11,6 @@ const productSchema = {
   price: { required: true, type: "number", min: 0 },
 };
 
-// ⚠️ Static routes MUST come before /:id routes
 router.get("/", protect, getAll);
 router.get("/low-stock", protect, getLowStock);
 router.post("/", protect, adminOnly, validate(productSchema), create);
@@ -22,4 +21,3 @@ router.patch("/:id/restock", protect, adminOnly, restock);
 router.delete("/:id", protect, adminOnly, remove);
 
 module.exports = router;
-
