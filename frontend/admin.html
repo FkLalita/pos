@@ -39,7 +39,7 @@
         </table>
       </div>
 
-      <!-- Add / Edit form -->
+      <!-- Add / Edit / Restock form -->
       <div class="card">
         <h3 id="formTitle">Add Product</h3>
         <div id="formAlert" class="alert"></div>
@@ -51,11 +51,20 @@
           <button class="btn btn-primary" id="saveBtn" style="flex:1">Add Product</button>
           <button class="btn" id="cancelBtn" style="display:none;background:var(--border)">Cancel</button>
         </div>
+
         <hr style="margin:1rem 0"/>
         <h3>Restock Product</h3>
-        <div class="field"><label>Product ID</label><input id="rId" type="number" placeholder="1"/></div>
-        <div class="field"><label>Quantity to Add</label><input id="rQty" type="number" min="1" placeholder="50"/></div>
-        <button class="btn btn-success" id="restockBtn" style="width:100%">Restock</button>
+        <div class="field">
+          <label>Product Name</label>
+          <select id="restockProduct" required>
+            <option value="">Select a product...</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Quantity</label>
+          <input id="restockQty" type="number" min="1" placeholder="e.g. 10"/>
+        </div>
+        <button class="btn btn-success" id="restockByNameBtn" style="width:100%">Restock</button>
       </div>
 
     </div>
