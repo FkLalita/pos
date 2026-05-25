@@ -15,6 +15,10 @@
     {
       "source": "/register",
       "destination": "/register.html"
+    },
+    {
+      "source": "/sales",
+      "destination": "/sales.html"
     }
   ]
 }

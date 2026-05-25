@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>POS — Sales History</title>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+  <nav class="navbar">
+    <h2>📋 Sales History</h2>
+    <div style="display:flex;align-items:center;gap:1rem">
+      <a href="admin.html" style="font-size:.875rem">⚙️ Admin</a>
+      <a href="dashboard.html" style="font-size:.875rem">🛒 Cashier</a>
+      <button class="btn btn-sm btn-danger" id="logoutBtn">Logout</button>
+    </div>
+  </nav>
+
+  <div class="container">
+
+    <!-- Summary strip -->
+    <div class="grid-3" style="margin-bottom:1.5rem">
+      <div class="card"><h3>Total Sales</h3><p id="totalSales" style="font-size:1.4rem;font-weight:700">—</p></div>
+      <div class="card"><h3>Total Revenue</h3><p id="totalRevenue" style="font-size:1.4rem;font-weight:700">—</p></div>
+      <div class="card"><h3>Today's Revenue</h3><p id="todayRevenue" style="font-size:1.4rem;font-weight:700">—</p></div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+        <h3 style="margin:0">All Sales</h3>
+        <button class="btn btn-success btn-sm" id="exportBtn">⬇️ Export CSV</button>
+      </div>
+
+      <div id="alert" class="alert"></div>
+
+      <table id="salesTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Date</th>
+            <th>Cashier</th>
+            <th>Items</th>
+            <th>Total</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="salesBody">
+          <tr><td colspan="6" style="color:var(--muted)">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- Sale detail modal -->
+  <div class="modal-overlay" id="detailModal">
+    <div class="modal">
+      <h3 style="margin-bottom:.75rem">Sale Details</h3>
+      <p id="detailMeta" style="font-size:.85rem;color:var(--muted);margin-bottom:.75rem"></p>
+      <table class="receipt-items" id="detailItems"></table>
+      <div class="receipt-total" id="detailTotal"></div>
+      <div style="margin-top:1rem">
+        <button class="btn" style="width:100%;background:var(--border)" id="closeDetail">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/sales.js"></script>
+</body>
+</html>
